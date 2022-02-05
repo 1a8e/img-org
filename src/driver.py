@@ -39,14 +39,14 @@ def get_image_size(img):
     return size, 'w' if size[0]/size[1] > 1 else 't'
 
 
-src_dir = 'D:\\Wall3\\'
-dst_dir = 'D:\\Wall4\\'
+src_dir = '/Users/cyan/workdir/Wall 3'
+dst_dir = '/Users/cyan/workdir/Wall 4'
 
 filenames = os.listdir(src_dir)
 
 file_hash_name_map = collections.defaultdict(list)
 
-for filename in tqdm.tqdm(filenames):
+for filename in tqdm.tqdm(sorted(filenames)):
     with open(os.path.join(src_dir, filename), 'rb') as image_file:
         try:
             extension = filename.split('.')[-1]
@@ -54,11 +54,14 @@ for filename in tqdm.tqdm(filenames):
             file_hash = hashlib.sha1(read_image).hexdigest()
             image = Image.open(io.BytesIO(read_image))
             size, ratio = get_image_size(image)
-            file_hash_name_map[f'{ratio}_{size[0]}_{file_hash}.{extension}'].append(filename)
+            file_hash_name_map[f'{ratio}_{size[0]}_{file_hash}'].append(filename)
         except (UnidentifiedImageError, DecompressionBombWarning) as err:
             print(f'Skipping {filename}: {file_hash}')
             continue
 
 
 for file_hash, filenames in tqdm.tqdm(file_hash_name_map.items()):
-    shutil.copy(os.path.join(src_dir, filenames[0]), os.path.join(dst_dir, file_hash))
+    shutil.copy(
+        os.path.join(src_dir, filenames[0]),
+        os.path.join(dst_dir, f'{file_hash}.{filenames[0].split(".")[-1]}')
+    )
