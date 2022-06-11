@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 tqdm = "4"
 pillow = "8"
+whatimage = "0.0.3"
 
 [dev-packages]
 

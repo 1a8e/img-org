@@ -4,6 +4,7 @@ import io
 import os
 import tqdm
 import shutil
+import whatimage
 from PIL import Image, ExifTags, UnidentifiedImageError
 from PIL.Image import DecompressionBombWarning
 
@@ -39,8 +40,8 @@ def get_image_size(img):
     return size, 'w' if size[0]/size[1] > 1 else 't'
 
 
-src_dir = '/Users/cyan/workdir/Wall 3'
-dst_dir = '/Users/cyan/workdir/Wall 4'
+src_dir = '/Users/cyan/workdir/porg/source/'
+dst_dir = '/Users/cyan/workdir/porg/dest/'
 
 filenames = os.listdir(src_dir)
 
@@ -49,11 +50,23 @@ file_hash_name_map = collections.defaultdict(list)
 for filename in tqdm.tqdm(sorted(filenames)):
     with open(os.path.join(src_dir, filename), 'rb') as image_file:
         try:
-            extension = filename.split('.')[-1]
             read_image = image_file.read()
+            # we get the hash before anything else
             file_hash = hashlib.sha1(read_image).hexdigest()
+
+            # non heif strategy
             image = Image.open(io.BytesIO(read_image))
             size, ratio = get_image_size(image)
+
+            fmt = whatimage.identify_image(read_image)
+            if fmt in ['heic', 'avif']:
+                i = pyheif.read_heif(read_image)
+
+                # Extract metadata etc
+                for metadata in i.metadata or []:
+                    if metadata['type'] == 'Exif':
+                # do whatever
+
             file_hash_name_map[f'{ratio}_{size[0]}_{file_hash}'].append(filename)
         except (UnidentifiedImageError, DecompressionBombWarning) as err:
             print(f'Skipping {filename}: {file_hash}')
